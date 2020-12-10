@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, ToastAndroid, StyleSheet } from 'react-native';
-import { Dialog, Portal, TextInput, Button } from 'react-native-paper';
-import { reasons } from '../assets/reasons';
+import { Dialog, Portal, TextInput, Button, Modal, Text, IconButton, Colors } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { TextInputMask } from 'react-native-masked-text';
@@ -9,6 +8,7 @@ import { createPDF } from "./pdfUtils";
 
 const GenerateAttestPopup = ({ profile, onCheckboxSelected, onConfirm }) => {
     const [visible, setVisible] = useState(false);
+    const [visibleConfirm, setVisibleConfirm] = useState(false);
     const [date, setDate] = useState(new Date());
     const [dateMask, setDateMask] = useState(date.toLocaleDateString());
     const [time, setTime] = useState(new Date());
@@ -27,7 +27,40 @@ const GenerateAttestPopup = ({ profile, onCheckboxSelected, onConfirm }) => {
 
     const generate = async () => {
         hideDialog();
-        createPDF(profile);
+        let newDate = ("0" + date.getDate()).slice(-2) + "/" + (date.getMonth() + 1) + "/" + date.getFullYear();
+        let copy = profile;
+        copy['time.time'] = ("0" + time.getHours()).slice(-2) + ":" + ("0" + time.getHours()).slice(-2);
+        copy['time.day'] = newDate;
+        let result = await createPDF(copy);
+        if (result.success) {
+            try {
+              const value = await AsyncStorage.getItem('profiles');
+              if (value !== null) {
+                let obj = JSON.parse(value);
+                let profileStr = JSON.stringify(profile);
+                console.log(profile);
+                obj.forEach(async (element, index) => {
+                    if (JSON.stringify(element) === profileStr) {
+                        if (!element['attests'])
+                            element['attests'] = [];
+                        try {
+                            console.log("HERE3)");
+                            element['attests'] = [];
+                            element['attests'].push({ title: result.data.title, createdDate: result.data.day, createdTime: result.data.time });
+                            element['attests'] = JSON.stringify(element['attests']);
+                            await AsyncStorage.setItem('profiles', JSON.stringify(obj));
+                            return;
+                        } catch (e) {
+                            ToastAndroid.show(e, ToastAndroid.SHORT);
+                        }
+                    }
+                });
+              }
+            } catch (e) {
+              ToastAndroid.show("Impossible de récupérer vos profils.", ToastAndroid.LONG);
+            }
+        } else
+            ToastAndroid.show("Une erreur est survenue. Veuillez réessayer.", ToastAndroid.LONG);
     };
 
     const renderContent = () => {
@@ -122,6 +155,33 @@ const GenerateAttestPopup = ({ profile, onCheckboxSelected, onConfirm }) => {
                     </Dialog.Actions>
                 </Dialog>
             </Portal>
+            <Portal>
+                <Modal visible={visibleConfirm} onDismiss={() => setVisibleConfirm(false)} contentContainerStyle={ styles.confirmModal }>
+                    <View style={ styles.confirmModalInsideView }>
+                        <IconButton
+                            icon="check-circle"
+                            color={Colors.green500}
+                            size={128}
+                            onPress={() => console.log('Pressed')}
+                        />
+                        <Text style={{ color: "black" }}>Attestation créée avec succès.</Text>
+                        <Text style={{ textAlign: "center", marginVertical: 8 }}>
+                            <Text style={{ color: "black" }}>Rendez-vous dans vos </Text>
+                            <Text style={{ fontWeight: "bold", color: "black" }}>"Dernières attestation"</Text>
+                            <Text style={{ color: "black" }}> pour la retrouver.</Text>
+                        </Text>
+                        <Button
+                            mode="contained"
+                            color={ Colors.green500 }
+                            dark
+                            style={{ marginTop: 8 }}
+                            onPress={() => setVisibleConfirm(false)}
+                        >
+                            Continuer
+                        </Button>
+                    </View>
+                </Modal>
+            </Portal>
             <Button mode="outlined" onPress={showDialog}>Générer l'attestation</Button>
         </>
     );
@@ -130,6 +190,20 @@ const GenerateAttestPopup = ({ profile, onCheckboxSelected, onConfirm }) => {
 const styles = StyleSheet.create({
     inputField: {
       marginVertical: 8
+    },
+    confirmModal: {
+        backgroundColor: "white",
+        borderRadius: 50,
+        width: "75%",
+        alignSelf: "center"
+    },
+    confirmModalInsideView: {
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        flexDirection: "column",
+        paddingHorizontal: 24,
+        paddingBottom: 24
     }
 });
 

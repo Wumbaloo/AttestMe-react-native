@@ -63,8 +63,7 @@ const ProfilesTab = () => {
             infos[key] = obj[0][key];
         }
         setInfos(infos);
-      } else
-        ToastAndroid.show("Impossible de récupérer vos profils.", ToastAndroid.LONG);
+      }
     } catch (e) {
       ToastAndroid.show("Impossible de récupérer vos profils.", ToastAndroid.LONG);
     }
@@ -102,7 +101,7 @@ const ProfilesTab = () => {
 
   const saveProfile = async () => {
     let savedProfiles: any = [{}];
-    if (Object.keys(infos).length !== fields.length) {
+    if (Object.keys(infos).length < fields.length) {
       ToastAndroid.show("Merci de compléter tous les  champs.", ToastAndroid.LONG);
       return;
     }

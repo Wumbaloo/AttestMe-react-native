@@ -9,8 +9,8 @@ import { reasons } from '../assets/reasons';
 
 const LeftContent = props => <Avatar.Icon {...props} icon="account" />
 
-const AttestTab = () => {
-  const [profiles, setProfiles] = useState([{}]);
+const AttestTab = ({ navigation }) => {
+  const [profiles, setProfiles] = useState([]);
   const [checkboxSelected, setCheckboxSelected] = useState(false);
 
   useEffect(() => {
@@ -28,8 +28,7 @@ const AttestTab = () => {
             copy[index][key] = element[key];
         });
         setProfiles(copy);
-      } else
-        ToastAndroid.show("Impossible de récupérer vos profils.", ToastAndroid.LONG);
+      }
     } catch (e) {
       ToastAndroid.show("Impossible de récupérer vos profils.", ToastAndroid.LONG);
     }
@@ -56,7 +55,7 @@ const AttestTab = () => {
         <Card.Title title={ profile['name.first'] + ' ' + profile['name.last']} left={LeftContent} />
         <Card.Content>
           <>
-            { !profile.reasons || profile.reasons.length === 0
+            { !profile.reasons || (profile.reasons && profile.reasons.length === 0)
             ?
               <Title>Sélectionnez un motif de déplacement.</Title>
             :
@@ -77,17 +76,17 @@ const AttestTab = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
-        { !profiles || profiles.length === 0
-        ?
-          <View>
-            <Title>Avant tout, créez vous un profil.</Title>
-            <Button>Créer mon profil</Button>
-          </View>
-        :
-          profilesCards
-        }
-      </ScrollView>
+      { !profiles || profiles.length === 0
+      ?
+        <View style={{ flex: 1, justifyContent: "center", alignContent: "center" }}>
+          <Title>Avant tout, créez vous un profil.</Title>
+          <Button onPress={() => navigation.navigate('Profils') }>Créer mon profil</Button>
+        </View>
+      :
+        <ScrollView>
+          { profilesCards }
+        </ScrollView>
+      }
     </SafeAreaView>
   );
 }

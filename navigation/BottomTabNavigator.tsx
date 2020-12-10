@@ -13,7 +13,6 @@ import { BottomTabParamList, AttestsParamList, LastAttestsParamList, ProfilsPara
 const BottomTab = createMaterialBottomTabNavigator<BottomTabParamList>();
 
 export default function BottomTabNavigator() {
-  const colorScheme = useColorScheme();
 
   return (
     <BottomTab.Navigator
@@ -36,7 +35,7 @@ export default function BottomTabNavigator() {
       />
       <BottomTab.Screen
         name="Profils"
-        component={TabThreeNavigator}
+        component={ProfilesTabNavigator}
         options={{
           tabBarIcon: ({ color }) => <TabBarIcon name="ios-people" color={color} />,
         }}
@@ -83,7 +82,7 @@ function LastAttestsNavigator() {
 
 const TabThreeStack = createStackNavigator<ProfilsParamList>();
 
-function TabThreeNavigator() {
+function ProfilesTabNavigator() {
   return (
     <TabThreeStack.Navigator>
       <TabThreeStack.Screen
