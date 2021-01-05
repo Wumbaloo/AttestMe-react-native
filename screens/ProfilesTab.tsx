@@ -5,12 +5,13 @@ import { Text, View } from '../components/Themed';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TextInputMask } from 'react-native-masked-text';
 
-const ProfilesTab = () => {
+const ProfilesTab = ( { navigation } ) => {
   const [infos, setInfos] = useState({});
   const [update, setUpdate] = useState(false);
 
   useEffect(() => {
     updateFields();
+    // profileStore.subscribe(() => console.log(profileStore.getState()));
   }, []);
 
   const fields = [
@@ -105,18 +106,20 @@ const ProfilesTab = () => {
       ToastAndroid.show("Merci de compléter tous les  champs.", ToastAndroid.LONG);
       return;
     }
+    // try {
+    //   const value = await AsyncStorage.getItem('profiles');
+    //   if (value !== null)
+    //     savedProfiles = JSON.parse(value);
+    // } catch (e) {
+    //   ToastAndroid.show("Erreur lors de la sauvegarde de votre profil.", ToastAndroid.LONG);
+    // }
     try {
-      const value = await AsyncStorage.getItem('profiles');
-      if (value !== null)
-        savedProfiles = JSON.parse(value);
-    } catch (e) {
-      ToastAndroid.show("Erreur lors de la sauvegarde de votre profil.", ToastAndroid.LONG);
-    }
-    try {
-      for (let key of Object.keys(infos)) {
-        savedProfiles[0][key] = infos[key];
-      }
+      infos['birth.day'] = infos['birth.day'].split('/').join('-');
+      for (let key of Object.keys(fields))
+        savedProfiles[0][fields[key]['key']] = infos[fields[key]['key']];
+      // profileStore.dispatch({ type: 'set', profiles: savedProfiles });
       await AsyncStorage.setItem('profiles', JSON.stringify(savedProfiles));
+      // setProfiles(savedProfiles);
       ToastAndroid.show("Profil enregistré avec succès.", ToastAndroid.SHORT);
     } catch (e) {
       ToastAndroid.show(e, ToastAndroid.SHORT);

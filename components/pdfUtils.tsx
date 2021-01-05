@@ -21,7 +21,7 @@ const reasonsPDF = [
 const qrTitle1 = 'QR-code contenant les informations ';
 const qrTitle2 = 'de votre attestation numérique';
 
-export const createPDFFile = async (profile) => {
+export const createPDFFile = async (profile, time, day) => {
   const currentDate = new Date();
   const creationDate = currentDate.getDate() + '/' + (currentDate.getMonth() + 1) + "/" + currentDate.getFullYear();
   const creationHour = currentDate
@@ -58,8 +58,8 @@ export const createPDFFile = async (profile) => {
   drawText(profile['birth.place'], 214, 684);
   drawText(`${profile['home.street']} ${profile['home.zipcode']} ${profile['home.city']}`, 104, 665);
   drawText(profile['home.city'], 78, 76);
-  drawText(profile['time.day'], 63, 58);
-  drawText(profile['time.time'], 227, 58);
+  drawText(day, 63, 58);
+  drawText(time, 227, 58);
   let reasonsString = "";
   profile['reasons'].forEach(index => {
     reasonsString += reasonsPDF[index].text + ", ";
@@ -122,16 +122,14 @@ export const createPDFFile = async (profile) => {
   // );
 
   const pdfDataUri = await pdfDoc.saveAsBase64();
-  let time = profile['time.time'].split(':').join('h');
-  let filename = "attestation-" + time +  "_" + profile['time.day'].split('/').join('-') + ".pdf";
-  RNFS.writeFile(RNFS.ExternalStorageDirectoryPath + "/documents/" + filename, pdfDataUri, 'base64').then(res => {
-      console.log(RNFS.ExternalStorageDirectoryPath + "/documents/" + filename);
-  });
-  return ({success: true, data: { title: filename, day: profile['time.day'], time: time }});
+  let timeHours = time.split(':').join('h');
+  let filename = "attestation-" + timeHours +  "_" + day.split('/').join('-') + ".pdf";
+  await RNFS.writeFile(RNFS.ExternalStorageDirectoryPath + "/documents/" + filename, pdfDataUri, 'base64');
 
+  return ({success: true, data: { title: filename, day: day, time: timeHours }});
 }
 
-export const createPDF = async (profile) => {
+export const createPDF = async (profile, time, day) => {
   try {
     const granted = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
@@ -142,7 +140,7 @@ export const createPDF = async (profile) => {
           PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED)
-          return (createPDFFile(profile));
+          return (createPDFFile(profile, time, day));
         else
           return {error: true, message: "Permission denied"};
       } catch (err) {
@@ -156,12 +154,10 @@ export const createPDF = async (profile) => {
 }
 
 export const openPDF = async (filename) => {
-  const dest = `${RNFS.ExternalStorageDirectoryPath}/${filename}`;
+  const dest = `${RNFS.ExternalStorageDirectoryPath}/documents/${filename}`;
 
-  console.log(dest);
   FileViewer.open(dest)
   .then(() => {
-    console.log("done");
     return {success: true};
   }).catch(error => {
     return {error: true};

@@ -14,11 +14,12 @@ const AttestTab = ({ navigation }) => {
   const [checkboxSelected, setCheckboxSelected] = useState(false);
 
   useEffect(() => {
-    getProfiles();
+      getProfiles();
+    // profileStore.subscribe(() => console.log(profileStore.getState()));
   }, []);
 
   const getProfiles = async () => {
-    try {
+    // try {
       const value = await AsyncStorage.getItem('profiles');
       if (value !== null) {
         let obj = JSON.parse(value);
@@ -27,11 +28,14 @@ const AttestTab = ({ navigation }) => {
           for (let key of Object.keys(element))
             copy[index][key] = element[key];
         });
+        // profileStore.dispatch({ type: 'set', profiles: copy });
+        // profilesSetter(copy);
         setProfiles(copy);
+        setCheckboxSelected(!checkboxSelected);
       }
-    } catch (e) {
-      ToastAndroid.show("Impossible de récupérer vos profils.", ToastAndroid.LONG);
-    }
+    // } catch (e) {
+    //   ToastAndroid.show("Impossible de récupérer vos profils.", ToastAndroid.LONG);
+    // }
   }
 
   const renderReasons = (profile) => {

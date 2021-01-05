@@ -28,7 +28,6 @@ const LastAttestsTab = ({ navigation }) => {
               copy[index][key] = element[key];
           }
         });
-        console.log(copy);
         setProfiles(copy);
       }
     } catch (e) {

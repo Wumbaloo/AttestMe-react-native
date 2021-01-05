@@ -20,32 +20,34 @@ const GenerateAttestPopup = ({ profile, onCheckboxSelected, onConfirm }) => {
 
     useEffect(() => {
         let newDate = ("0" + date.getDate()).slice(-2) + "/" + (date.getMonth() + 1) + "/" + date.getFullYear();
-        console.log(newDate);
-        console.log(date.toString());
         setDateMask(newDate);
     }, [date]);
+
+    const isProfileEqual = (profile1, profile2) => {
+        Object.keys(profile1).forEach(element => {
+            if (profile1[element] != profile2[element] && element !== "attests")
+                return false;
+        });
+        return true;
+    };
 
     const generate = async () => {
         hideDialog();
         let newDate = ("0" + date.getDate()).slice(-2) + "/" + (date.getMonth() + 1) + "/" + date.getFullYear();
-        let copy = profile;
-        copy['time.time'] = ("0" + time.getHours()).slice(-2) + ":" + ("0" + time.getHours()).slice(-2);
-        copy['time.day'] = newDate;
-        let result = await createPDF(copy);
+
+        let timeFormatted = ("0" + time.getHours()).slice(-2) + ":" + ("0" + time.getMinutes()).slice(-2);
+        let day = newDate;
+        let result = await createPDF(profile, timeFormatted, day);
         if (result.success) {
             try {
               const value = await AsyncStorage.getItem('profiles');
               if (value !== null) {
                 let obj = JSON.parse(value);
-                let profileStr = JSON.stringify(profile);
-                console.log(profile);
                 obj.forEach(async (element, index) => {
-                    if (JSON.stringify(element) === profileStr) {
+                    if (isProfileEqual(element, profile)) {
                         if (!element['attests'])
                             element['attests'] = [];
                         try {
-                            console.log("HERE3)");
-                            element['attests'] = [];
                             element['attests'].push({ title: result.data.title, createdDate: result.data.day, createdTime: result.data.time });
                             element['attests'] = JSON.stringify(element['attests']);
                             await AsyncStorage.setItem('profiles', JSON.stringify(obj));
@@ -162,7 +164,7 @@ const GenerateAttestPopup = ({ profile, onCheckboxSelected, onConfirm }) => {
                             icon="check-circle"
                             color={Colors.green500}
                             size={128}
-                            onPress={() => console.log('Pressed')}
+                            onPress={() => setVisibleConfirm(false)}
                         />
                         <Text style={{ color: "black" }}>Attestation créée avec succès.</Text>
                         <Text style={{ textAlign: "center", marginVertical: 8 }}>
